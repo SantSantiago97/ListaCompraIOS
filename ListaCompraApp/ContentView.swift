@@ -1,0 +1,1318 @@
+import SwiftUI
+import WebKit
+
+struct WebViewContainer: UIViewRepresentable {
+    let htmlString: String
+
+    func makeUIView(context: Context) -> WKWebView {
+        let config = WKWebViewConfiguration()
+        config.preferences.javaScriptEnabled = true
+        let webView = WKWebView(frame: .zero, configuration: config)
+        webView.scrollView.bounces = true
+        webView.isOpaque = false
+        webView.backgroundColor = .clear
+        webView.scrollView.backgroundColor = .clear
+        return webView
+    }
+
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        webView.loadHTMLString(htmlString, baseURL: nil)
+    }
+}
+
+struct ContentView: View {
+    var body: some View {
+        WebViewContainer(htmlString: htmlContent)
+            .ignoresSafeArea()
+    }
+}
+
+private let htmlContent = """
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Lista de la Compra Inteligente</title>
+<style>
+  :root {
+    --bg: #f3f5f8;
+    --card: #ffffff;
+    --ink: #111827;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --accent: #0050aa;
+    --accent-soft: #e8f1fc;
+    --ok: #0f766e;
+    --ok-soft: #e6f4f1;
+    --danger: #b91c1c;
+    --danger-soft: #fef2f2;
+    --shadow: 0 2px 10px rgba(17, 24, 39, 0.06);
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding-bottom: 104px;
+  }
+
+  .app-shell {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 14px 10px;
+  }
+
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .brand h1 {
+    margin: 0;
+    font-size: 1.08rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .brand p {
+    margin: 2px 0 0;
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .icon-btn {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 10px;
+    padding: 7px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .icon-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .icon-btn.active-mode {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+  }
+
+  .search-box {
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 9px 34px 9px 12px;
+    border-radius: 11px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    font-size: 0.92rem;
+    color: var(--ink);
+    outline: none;
+  }
+
+  .search-box input:focus {
+    border-color: var(--accent);
+  }
+
+  .clear-search {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .filter-pills {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .filter-pills::-webkit-scrollbar { display: none; }
+
+  .pill {
+    flex: 0 0 auto;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .manage-banner {
+    display: none;
+    margin: 10px 12px 0;
+    padding: 9px 12px;
+    border-radius: 12px;
+    background: var(--danger-soft);
+    border: 1px solid #fecaca;
+    color: var(--danger);
+    font-size: 0.8rem;
+    font-weight: 600;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .manage-banner.show { display: flex; }
+
+  main {
+    padding: 12px 12px 16px;
+  }
+
+  .category-block {
+    margin-bottom: 16px;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 4px;
+    margin-bottom: 8px;
+  }
+
+  .category-title {
+    font-size: 0.88rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .category-count {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .item-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 11px 12px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow);
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .item-card.selected {
+    border-color: #93c5fd;
+    background: #fafcff;
+  }
+
+  .item-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 9px;
+  }
+
+  .item-name-wrap {
+    flex: 1;
+    cursor: pointer;
+  }
+
+  .item-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .item-note {
+    font-size: 0.74rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .price-box {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .price-btn {
+    border: 1px solid var(--line);
+    background: #f9fafb;
+    color: var(--ink);
+    border-radius: 9px;
+    padding: 5px 8px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .price-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .delete-quick-btn {
+    border: 1px solid #fecaca;
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-radius: 9px;
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .qty-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .circles {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .qty-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid #cbd5e1;
+    background: #fff;
+    color: var(--ink);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s ease;
+  }
+
+  .qty-circle.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    transform: scale(1.05);
+  }
+
+  .subtotal-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .subtotal-label.has-val {
+    color: var(--ok);
+  }
+
+  .bottom-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 35;
+    background: #fff;
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -4px 16px rgba(17, 24, 39, 0.08);
+  }
+
+  .dock-inner {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .dock-meta {
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+
+  .dock-total {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .dock-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-secondary {
+    border: 1px solid var(--line);
+    background: #f9fafb;
+    color: var(--ink);
+    border-radius: 11px;
+    padding: 9px 12px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    border: none;
+    background: var(--ok);
+    color: #fff;
+    border-radius: 11px;
+    padding: 9px 14px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(17, 24, 39, 0.45);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .modal-backdrop.open {
+    display: flex;
+  }
+
+  .modal-sheet {
+    width: 100%;
+    max-width: 480px;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    padding: 18px 16px 26px;
+    max-height: 86vh;
+    overflow-y: auto;
+  }
+
+  .modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .modal-head h2 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+
+  .close-x {
+    border: none;
+    background: #f3f4f6;
+    border-radius: 999px;
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .field {
+    margin-bottom: 12px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: #374151;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    padding: 9px 11px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    font-size: 0.92rem;
+    background: #fff;
+  }
+
+  .btn-danger-outline {
+    width: 100%;
+    margin-top: 10px;
+    border: 1px solid #fca5a5;
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-radius: 11px;
+    padding: 10px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .ticket-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 0.88rem;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 82px;
+    transform: translateX(-50%);
+    z-index: 60;
+    background: #111827;
+    color: #fff;
+    padding: 9px 14px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+    max-width: 92vw;
+  }
+
+  .toast.show { display: flex; }
+
+  .toast-undo {
+    border: none;
+    background: #fbbf24;
+    color: #111827;
+    border-radius: 8px;
+    padding: 4px 9px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header>
+    <div class="top-row">
+      <div class="brand">
+        <h1>Lista de la Compra</h1>
+        <p id="statsSubtitle">0 artículos · 0 uds</p>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="toggleManageBtn" title="Modo eliminar artículos">🗑 Quitar</button>
+        <button class="icon-btn primary" id="openAddBtn">+ Nuevo</button>
+        <button class="icon-btn" id="openSettingsBtn" title="Opciones">⚙️</button>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <input type="search" id="searchInput" placeholder="Buscar producto en la lista..." autocomplete="off" />
+      <button class="clear-search" id="clearSearchBtn" title="Limpiar búsqueda">✕</button>
+    </div>
+
+    <div class="filter-pills" id="filterPills"></div>
+  </header>
+
+  <div class="manage-banner" id="manageBanner">
+    <span>Modo eliminar activado: pulsa <b>✕ Quitar</b> en el producto que quieras borrar.</span>
+    <button class="icon-btn" id="exitManageBtn">Listo</button>
+  </div>
+
+  <main id="listContainer"></main>
+</div>
+
+<div class="bottom-dock">
+  <div class="dock-inner">
+    <div>
+      <div class="dock-meta" id="dockCount">0 productos seleccionados</div>
+      <div class="dock-total" id="dockTotal">0,00 €</div>
+    </div>
+    <div class="dock-actions">
+      <button class="btn-secondary" id="clearCartBtn">Limpiar</button>
+      <button class="btn-primary" id="openTicketBtn">Ver cesta</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastBox">
+  <span id="toastText"></span>
+  <button class="toast-undo" id="toastUndoBtn" style="display:none;">Deshacer</button>
+</div>
+
+<!-- Modal Añadir Producto -->
+<div class="modal-backdrop" id="addModal">
+  <div class="modal-sheet">
+    <div class="modal-head">
+      <h2>Añadir nuevo producto</h2>
+      <button class="close-x" data-close="addModal">✕</button>
+    </div>
+    <form id="addForm">
+      <div class="field">
+        <label for="newName">Nombre del producto</label>
+        <input type="text" id="newName" required placeholder="Ej. Aceite de oliva virgen extra" />
+      </div>
+      <div class="field">
+        <label for="newCategory">Sección</label>
+        <select id="newCategory"></select>
+      </div>
+      <div class="field">
+        <label for="newPrice">Precio unitario (€)</label>
+        <input type="number" id="newPrice" step="0.01" min="0" required placeholder="Ej. 2.45" />
+      </div>
+      <div class="field">
+        <label for="newNote">Nota o formato (opcional)</label>
+        <input type="text" id="newNote" placeholder="Ej. Pack 6 uds o ref. 5,37 €/kg" />
+      </div>
+      <div class="field">
+        <label for="newQty">Cantidad inicial en cesta</label>
+        <input type="number" id="newQty" min="0" max="99" value="1" />
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%; padding:11px;">Guardar en la lista</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Editar Producto / Eliminar -->
+<div class="modal-backdrop" id="editModal">
+  <div class="modal-sheet">
+    <div class="modal-head">
+      <h2 id="editTitle">Editar producto</h2>
+      <button class="close-x" data-close="editModal">✕</button>
+    </div>
+    <form id="editForm">
+      <input type="hidden" id="editId" />
+      <div class="field">
+        <label for="editName">Nombre</label>
+        <input type="text" id="editName" required />
+      </div>
+      <div class="field">
+        <label for="editPrice">Precio (€)</label>
+        <input type="number" id="editPrice" step="0.01" min="0" required />
+      </div>
+      <div class="field">
+        <label for="editNote">Nota / referencia</label>
+        <input type="text" id="editNote" />
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%; padding:11px;">Guardar cambios</button>
+      <button type="button" class="btn-danger-outline" id="deleteFromModalBtn">Eliminar artículo del catálogo</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Cesta / Ticket -->
+<div class="modal-backdrop" id="ticketModal">
+  <div class="modal-sheet">
+    <div class="modal-head">
+      <h2>Resumen de la cesta</h2>
+      <button class="close-x" data-close="ticketModal">✕</button>
+    </div>
+    <div id="ticketLines"></div>
+    <div style="margin-top:14px; display:flex; justify-content:space-between; font-weight:800; font-size:1.05rem;">
+      <span>Total estimado</span>
+      <span id="ticketTotal">0,00 €</span>
+    </div>
+    <div style="margin-top:14px; display:flex; gap:8px;">
+      <button class="btn-secondary" style="flex:1;" id="copyListBtn">Copiar texto</button>
+      <button class="btn-primary" style="flex:1;" data-close="ticketModal">Seguir comprando</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ajustes -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal-sheet">
+    <div class="modal-head">
+      <h2>Ajustes y catálogo</h2>
+      <button class="close-x" data-close="settingsModal">✕</button>
+    </div>
+    <p style="font-size:0.85rem; color:var(--muted); margin-top:0;">
+      Los cambios de cantidades, precios y artículos añadidos o eliminados se guardan en este dispositivo.
+    </p>
+    <button class="btn-secondary" style="width:100%; padding:11px; margin-bottom:10px;" id="exportJsonBtn">Exportar copia de seguridad (.json)</button>
+    <button class="btn-danger-outline" id="resetCatalogBtn">Restaurar catálogo y precios originales</button>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  { id: "carniceria", name: "Carnicería y charcutería", icon: "🥩" },
+  { id: "pescaderia_congelados", name: "Pescadería y congelados", icon: "🧊" },
+  { id: "lacteos_refrigerados", name: "Lácteos y refrigerados", icon: "🥛" },
+  { id: "frutas_verduras", name: "Frutas y verduras", icon: "🍊" },
+  { id: "panaderia_bolleria", name: "Panadería, bollería y cereales", icon: "🥐" },
+  { id: "despensa", name: "Despensa, pastas, arroces y conservas", icon: "🍝" },
+  { id: "bebidas", name: "Bebidas", icon: "🥤" },
+  { id: "limpieza", name: "Limpieza y hogar", icon: "🧼" },
+  { id: "higiene_mascotas", name: "Higiene, cuidado personal y mascotas", icon: "🧴" }
+];
+
+const INITIAL_ITEMS = [
+  // Carnicería y charcutería
+  { id: "panceta_cerdo", name: "Panceta de cerdo / Panceta", cat: "carniceria", price: 3.81, note: "Ref. 5,37 €/kg" },
+  { id: "longaniza_fresca", name: "Longaniza fresca", cat: "carniceria", price: 2.69, note: "" },
+  { id: "long_fresca_sin_trip", name: "Longaniza fresca sin tripa", cat: "carniceria", price: 2.69, note: "" },
+  { id: "longaniza_blanca", name: "Longaniza blanca", cat: "carniceria", price: 2.15, note: "" },
+  { id: "hamburguesa", name: "Hamburguesa", cat: "carniceria", price: 3.75, note: "" },
+  { id: "burger_cerdo", name: "Burger de cerdo", cat: "carniceria", price: 2.59, note: "" },
+  { id: "burger_meat_cerdo", name: "Burger meat de cerdo", cat: "carniceria", price: 4.99, note: "" },
+  { id: "chorizo_picante", name: "Chorizo picante", cat: "carniceria", price: 2.39, note: "" },
+  { id: "chorizo_oreado", name: "Chorizo oreado", cat: "carniceria", price: 3.14, note: "Ref. 7,00 €/kg" },
+  { id: "morcilla_burgos", name: "Morcilla de Burgos", cat: "carniceria", price: 1.65, note: "" },
+  { id: "jamoncitos_xxl", name: "Jamoncitos XXL / Fo ahorro", cat: "carniceria", price: 3.88, note: "Ref. 3,29–3,59 €/kg" },
+  { id: "cuartos_pollo", name: "Cuartos de pollo", cat: "carniceria", price: 5.45, note: "Ref. 2,99 €/kg" },
+  { id: "pollo_entero", name: "Pollo entero", cat: "carniceria", price: 5.28, note: "Ref. 3,25–3,50 €/kg" },
+  { id: "pechuga_pollo", name: "Pechuga de pollo", cat: "carniceria", price: 4.38, note: "" },
+  { id: "conejo_entero", name: "Conejo entero", cat: "carniceria", price: 10.42, note: "Ref. 8,15 €/kg" },
+  { id: "alas_ahorro", name: "Alas / Alitas formato ahorro / XXL", cat: "carniceria", price: 4.46, note: "Ref. 3,95–4,35 €/kg" },
+  { id: "lomo_adobado", name: "Lomo adobado / XXL", cat: "carniceria", price: 3.81, note: "Ref. 6,56–6,75 €/kg" },
+  { id: "chuletas_aguja", name: "Chuleta de aguja", cat: "carniceria", price: 3.74, note: "Ref. 5,07 €/kg" },
+  { id: "chuletas_cabeza_lomo", name: "Chuletas cabeza de lomo", cat: "carniceria", price: 4.53, note: "Ref. 5,50 €/kg" },
+  { id: "a_tacos", name: "Carne para tacos (A tacos)", cat: "carniceria", price: 3.30, note: "Ref. 5,49 €/kg" },
+  { id: "bacon_cocido_ahumado", name: "Bacon cocido ahumado", cat: "carniceria", price: 1.89, note: "" },
+  { id: "bacon_tiras_ahum_nat", name: "Bacon tiras ahumado natural", cat: "carniceria", price: 1.86, note: "" },
+  { id: "mini_taquitos_jamon", name: "Mini taquitos de jamón / Taquitos", cat: "carniceria", price: 2.55, note: "" },
+  { id: "jamon_cocido", name: "Jamón cocido / Extra", cat: "carniceria", price: 2.09, note: "" },
+  { id: "mortadela_pieza", name: "Mortadela pieza", cat: "carniceria", price: 2.99, note: "" },
+  { id: "salchichas_frankfurt", name: "Salchichas Frankfurt", cat: "carniceria", price: 1.83, note: "" },
+  { id: "campofrio_salchichas", name: "Salchichas Campofrio", cat: "carniceria", price: 2.45, note: "" },
+  { id: "espetec_extra", name: "Espetec extra", cat: "carniceria", price: 1.79, note: "" },
+
+  // Pescadería y congelados
+  { id: "nuggets_pollo", name: "Nuggets de pollo", cat: "pescaderia_congelados", price: 4.99, note: "" },
+  { id: "arroz_3_delicias", name: "Arroz 3 delicias", cat: "pescaderia_congelados", price: 2.69, note: "" },
+  { id: "guisante_fino", name: "Guisante fino", cat: "pescaderia_congelados", price: 1.49, note: "" },
+  { id: "patatas_corte_grueso", name: "Patatas corte grueso", cat: "pescaderia_congelados", price: 3.49, note: "" },
+  { id: "espinacas_hojas", name: "Espinacas en hojas", cat: "pescaderia_congelados", price: 1.69, note: "" },
+  { id: "sardinas", name: "Sardinas / Enteras", cat: "pescaderia_congelados", price: 3.99, note: "" },
+  { id: "varitas_merluza", name: "Varitas de merluza", cat: "pescaderia_congelados", price: 3.49, note: "" },
+  { id: "filetes_merluza", name: "Filetes de merluza", cat: "pescaderia_congelados", price: 7.39, note: "" },
+  { id: "langostinos_cocidos", name: "Langostinos cocidos", cat: "pescaderia_congelados", price: 9.49, note: "" },
+  { id: "muslitos_mar", name: "Muslitos de mar", cat: "pescaderia_congelados", price: 1.45, note: "" },
+  { id: "croquetas_jamon", name: "Croquetas de jamón", cat: "pescaderia_congelados", price: 1.19, note: "" },
+  { id: "croquetas_pollo", name: "Croquetas de pollo", cat: "pescaderia_congelados", price: 1.39, note: "" },
+  { id: "pizza_4_quesos", name: "Pizza 4 quesos", cat: "pescaderia_congelados", price: 2.79, note: "" },
+  { id: "pizza_barbacoa", name: "Pizza barbacoa", cat: "pescaderia_congelados", price: 2.45, note: "" },
+  { id: "pizza_pollo", name: "Pizza pollo", cat: "pescaderia_congelados", price: 2.59, note: "" },
+  { id: "churros", name: "Churros", cat: "pescaderia_congelados", price: 1.35, note: "" },
+  { id: "cono_vainilla", name: "Cono vainilla / Helado leche", cat: "pescaderia_congelados", price: 1.99, note: "" },
+  { id: "tarta_helada", name: "Tarta helada", cat: "pescaderia_congelados", price: 1.99, note: "" },
+  { id: "bola_nieve", name: "Bola de nieve", cat: "pescaderia_congelados", price: 5.99, note: "" },
+
+  // Lácteos y refrigerados
+  { id: "leche_semidesnatada", name: "Leche semidesnatada", cat: "lacteos_refrigerados", price: 1.17, note: "" },
+  { id: "leche_entera", name: "Leche entera / Pack leche entera", cat: "lacteos_refrigerados", price: 1.25, note: "" },
+  { id: "nata_cocinar", name: "Nata para cocinar", cat: "lacteos_refrigerados", price: 1.79, note: "" },
+  { id: "queso_fundido", name: "Queso fundido / 24 lonchas", cat: "lacteos_refrigerados", price: 1.85, note: "" },
+  { id: "queso_fundido_lonch", name: "Queso fundido lonchas", cat: "lacteos_refrigerados", price: 1.89, note: "" },
+  { id: "queso_fundido_burger", name: "Queso fundido burger", cat: "lacteos_refrigerados", price: 1.25, note: "" },
+  { id: "mozzarella_rallada", name: "Mozzarella rallada / Familiar", cat: "lacteos_refrigerados", price: 2.89, note: "" },
+  { id: "griego_fresa", name: "Yogur griego fresa", cat: "lacteos_refrigerados", price: 1.69, note: "" },
+  { id: "griego_stracciatella", name: "Yogur griego stracciatella", cat: "lacteos_refrigerados", price: 1.79, note: "" },
+  { id: "griego_vainilla", name: "Yogur griego vainilla", cat: "lacteos_refrigerados", price: 1.69, note: "" },
+  { id: "griego_azucarado", name: "Yogur griego azucarado", cat: "lacteos_refrigerados", price: 1.45, note: "" },
+  { id: "natillas_vainilla", name: "Natillas vainilla", cat: "lacteos_refrigerados", price: 0.99, note: "" },
+  { id: "flan_vainilla", name: "Flan de vainilla", cat: "lacteos_refrigerados", price: 1.05, note: "" },
+  { id: "gelli_multisabor", name: "Gelli multisabor", cat: "lacteos_refrigerados", price: 0.79, note: "" },
+  { id: "gelatina_fresa", name: "Gelatina fresa", cat: "lacteos_refrigerados", price: 0.79, note: "" },
+  { id: "copa_choco_nata", name: "Copa choco y nata", cat: "lacteos_refrigerados", price: 0.59, note: "" },
+  { id: "frutas_bebible", name: "Frutas bebible / 0%", cat: "lacteos_refrigerados", price: 1.39, note: "" },
+  { id: "fruta_y_leche", name: "Fruta y leche / Mediterránea", cat: "lacteos_refrigerados", price: 1.15, note: "" },
+  { id: "margarina_girasol", name: "Margarina de girasol", cat: "lacteos_refrigerados", price: 1.45, note: "" },
+  { id: "tortilla_patata", name: "Tortilla de patata / Patatas", cat: "lacteos_refrigerados", price: 2.69, note: "" },
+  { id: "tortilla_pat_cebolla", name: "Tortilla de patata y cebolla", cat: "lacteos_refrigerados", price: 2.65, note: "" },
+  { id: "ensaladilla", name: "Ensaladilla", cat: "lacteos_refrigerados", price: 0.99, note: "" },
+  { id: "canelones_carne", name: "Canelones de carne", cat: "lacteos_refrigerados", price: 2.99, note: "" },
+  { id: "lasana_bolonesa", name: "Lasaña boloñesa", cat: "lacteos_refrigerados", price: 2.99, note: "" },
+  { id: "san_jacobos", name: "San Jacobos", cat: "lacteos_refrigerados", price: 1.25, note: "" },
+  { id: "caprichos", name: "Caprichos", cat: "lacteos_refrigerados", price: 2.19, note: "" },
+  { id: "mini_empanadilla", name: "Mini empanadilla", cat: "lacteos_refrigerados", price: 1.78, note: "" },
+
+  // Frutas y verduras
+  { id: "naranja_mesa", name: "Naranja de mesa", cat: "frutas_verduras", price: 3.96, note: "Ref. 1,85 €/kg" },
+  { id: "naranja", name: "Naranja", cat: "frutas_verduras", price: 0.92, note: "" },
+  { id: "manzana_roja_2kg", name: "Manzana roja (2 kg)", cat: "frutas_verduras", price: 3.58, note: "" },
+  { id: "limon", name: "Limón", cat: "frutas_verduras", price: 0.92, note: "" },
+
+  // Panadería, bollería y cereales
+  { id: "pan_tostado", name: "Pan tostado", cat: "panaderia_bolleria", price: 2.25, note: "" },
+  { id: "pan_molde_blanco", name: "Pan de molde blanco", cat: "panaderia_bolleria", price: 1.09, note: "" },
+  { id: "pan_hot_dog", name: "Pan / Panes hot dog", cat: "panaderia_bolleria", price: 0.88, note: "" },
+  { id: "burger_sesamo", name: "Burger con sésamo / Maxi", cat: "panaderia_bolleria", price: 0.79, note: "" },
+  { id: "tortillas_trigo", name: "Tortillas de trigo", cat: "panaderia_bolleria", price: 0.89, note: "" },
+  { id: "masa_empanadillas", name: "Masa para empanadillas", cat: "panaderia_bolleria", price: 1.15, note: "" },
+  { id: "croissants", name: "Croissants", cat: "panaderia_bolleria", price: 1.45, note: "" },
+  { id: "croissants_cacao", name: "Croissants con cacao", cat: "panaderia_bolleria", price: 1.79, note: "" },
+  { id: "napolitanas_cacao", name: "Napolitanas cacao", cat: "panaderia_bolleria", price: 1.49, note: "" },
+  { id: "palmeritas", name: "Palmeritas", cat: "panaderia_bolleria", price: 1.49, note: "" },
+  { id: "sobaos_18", name: "Sobaos 18 uds.", cat: "panaderia_bolleria", price: 1.95, note: "" },
+  { id: "magdalenas_redondas", name: "Magdalenas redondas", cat: "panaderia_bolleria", price: 1.92, note: "" },
+  { id: "mini_cookies", name: "Mini cookies", cat: "panaderia_bolleria", price: 1.29, note: "" },
+  { id: "cookies_pepitas_choc", name: "Cookies pepitas de chocolate", cat: "panaderia_bolleria", price: 1.29, note: "" },
+  { id: "cookies_40", name: "Cookies 40%", cat: "panaderia_bolleria", price: 1.55, note: "" },
+  { id: "mini_galletas", name: "Mini galletas", cat: "panaderia_bolleria", price: 1.95, note: "" },
+  { id: "galleta_relieve", name: "Galleta relieve", cat: "panaderia_bolleria", price: 1.55, note: "" },
+  { id: "galletitas_saladas", name: "Galletitas saladas", cat: "panaderia_bolleria", price: 1.15, note: "" },
+  { id: "mini_estrellas_choco", name: "Mini estrellas choco / Leche / Blanco", cat: "panaderia_bolleria", price: 1.25, note: "" },
+  { id: "morenazos_ch_blanco", name: "Morenazos ch. blanco", cat: "panaderia_bolleria", price: 0.85, note: "" },
+  { id: "almendrado_mini", name: "Almendrado / Mini almendrado", cat: "panaderia_bolleria", price: 2.89, note: "" },
+  { id: "chocolate_blanco", name: "Chocolate blanco", cat: "panaderia_bolleria", price: 0.99, note: "" },
+  { id: "choco_krispies", name: "Choco Krispies", cat: "panaderia_bolleria", price: 3.55, note: "" },
+  { id: "choco_flakes", name: "Choco Flakes", cat: "panaderia_bolleria", price: 3.89, note: "" },
+  { id: "cacao_instantaneo", name: "Cacao instantáneo", cat: "panaderia_bolleria", price: 3.95, note: "" },
+  { id: "campurrianas", name: "Campurrianas", cat: "panaderia_bolleria", price: 1.20, note: "" },
+
+  // Despensa, pastas, arroces y conservas
+  { id: "spaghetti", name: "Spaghetti / Nº3", cat: "despensa", price: 0.75, note: "" },
+  { id: "macarron", name: "Macarrón / Nº6 / Rayado", cat: "despensa", price: 1.09, note: "" },
+  { id: "tallarin", name: "Tallarín", cat: "despensa", price: 0.75, note: "" },
+  { id: "fideo_grueso_4", name: "Fideo grueso nº4", cat: "despensa", price: 0.77, note: "" },
+  { id: "arroz_redondo", name: "Arroz redondo", cat: "despensa", price: 1.19, note: "" },
+  { id: "arroz_largo", name: "Arroz largo", cat: "despensa", price: 1.05, note: "" },
+  { id: "alubia_blanca", name: "Alubia blanca", cat: "despensa", price: 0.69, note: "" },
+  { id: "lentejas", name: "Lentejas", cat: "despensa", price: 1.93, note: "" },
+  { id: "garbanzos", name: "Garbanzos", cat: "despensa", price: 0.73, note: "" },
+  { id: "harina_trigo", name: "Harina de trigo", cat: "despensa", price: 0.69, note: "" },
+  { id: "pan_rallado", name: "Pan rallado", cat: "despensa", price: 0.78, note: "" },
+  { id: "pure_patatas", name: "Puré de patatas", cat: "despensa", price: 1.65, note: "" },
+  { id: "gallina_blanca_sopas", name: "Gallina Blanca sopas / Sopa", cat: "despensa", price: 0.85, note: "" },
+  { id: "caldo_pastillas", name: "Caldo pastillas", cat: "despensa", price: 1.65, note: "" },
+  { id: "tomate_frito", name: "Tomate frito", cat: "despensa", price: 1.19, note: "" },
+  { id: "tomate_triturado", name: "Tomate triturado", cat: "despensa", price: 0.63, note: "" },
+  { id: "aceite_girasol", name: "Aceite de girasol", cat: "despensa", price: 1.72, note: "" },
+  { id: "aceite_oliva_suave", name: "Aceite oliva suave", cat: "despensa", price: 17.72, note: "" },
+  { id: "mayonesa", name: "Mayonesa / Kania mayonesa", cat: "despensa", price: 1.19, note: "" },
+  { id: "ketchup", name: "Kétchup", cat: "despensa", price: 0.98, note: "" },
+  { id: "mostaza_suave", name: "Mostaza suave", cat: "despensa", price: 1.69, note: "" },
+  { id: "cebolla_frita", name: "Cebolla frita", cat: "despensa", price: 1.09, note: "" },
+  { id: "atun_aceite_girasol", name: "Atún aceite girasol", cat: "despensa", price: 6.25, note: "" },
+  { id: "mejillones_escabeche", name: "Mejillones en escabeche", cat: "despensa", price: 2.29, note: "" },
+  { id: "mermelada_fresa", name: "Mermelada de fresa", cat: "despensa", price: 2.25, note: "" },
+  { id: "azucar_blanco", name: "Azúcar blanco", cat: "despensa", price: 0.99, note: "" },
+  { id: "cafe_mezcla", name: "Café mezcla", cat: "despensa", price: 4.35, note: "" },
+  { id: "manzanilla", name: "Manzanilla", cat: "despensa", price: 0.52, note: "" },
+  { id: "tila", name: "Tila", cat: "despensa", price: 0.99, note: "" },
+  { id: "pimienta_negra", name: "Pimienta negra", cat: "despensa", price: 0.75, note: "" },
+  { id: "pimenton_rojo", name: "Pimentón rojo", cat: "despensa", price: 1.79, note: "" },
+  { id: "pimenton_picante", name: "Pimentón picante", cat: "despensa", price: 0.99, note: "" },
+  { id: "curry", name: "Curry", cat: "despensa", price: 0.69, note: "" },
+  { id: "fritos", name: "Fritos", cat: "despensa", price: 0.85, note: "" },
+  { id: "fritos_maiz", name: "Fritos de maíz", cat: "despensa", price: 0.69, note: "" },
+  { id: "fritos_barbacoa", name: "Fritos sabor barbacoa", cat: "despensa", price: 0.59, note: "" },
+  { id: "fritos_queso", name: "Fritos sabor queso", cat: "despensa", price: 0.85, note: "" },
+  { id: "nachos_chips", name: "Nachos chips", cat: "despensa", price: 1.49, note: "" },
+  { id: "conos", name: "Conos", cat: "despensa", price: 0.76, note: "" },
+  { id: "cocktail", name: "Cocktail", cat: "despensa", price: 1.59, note: "" },
+  { id: "caramelos_fruta", name: "Caramelos fruta / Blandos", cat: "despensa", price: 2.39, note: "" },
+  { id: "halls_respiral", name: "Halls Respiral", cat: "despensa", price: 1.95, note: "" },
+
+  // Bebidas
+  { id: "coca_cola", name: "Coca Cola regular", cat: "bebidas", price: 2.15, note: "" },
+  { id: "florida", name: "Florida", cat: "bebidas", price: 0.99, note: "" },
+  { id: "naranja_botella", name: "Naranja botella", cat: "bebidas", price: 0.92, note: "" },
+  { id: "bebida_pina", name: "Bebida de piña", cat: "bebidas", price: 0.95, note: "" },
+  { id: "refresco_energetico", name: "Refresco energético", cat: "bebidas", price: 0.59, note: "" },
+
+  // Limpieza y hogar
+  { id: "lavavajillas", name: "Lavavajillas", cat: "limpieza", price: 1.79, note: "" },
+  { id: "papel_higienico", name: "Papel higiénico", cat: "limpieza", price: 2.45, note: "" },
+  { id: "detergente_marsella", name: "Detergente Marsella", cat: "limpieza", price: 4.49, note: "" },
+  { id: "detergente_colonia", name: "Detergente colonia", cat: "limpieza", price: 3.29, note: "" },
+  { id: "suavizante_azul", name: "Suavizante azul", cat: "limpieza", price: 1.69, note: "" },
+  { id: "cillit_bang", name: "Cillit Bang limpiador", cat: "limpieza", price: 3.79, note: "" },
+  { id: "kh7_quitagrasas", name: "KH-7 quitagrasas", cat: "limpieza", price: 3.69, note: "" },
+  { id: "limpiacristales", name: "Limpiacristales mult.", cat: "limpieza", price: 0.95, note: "" },
+  { id: "estropajos_acero", name: "Estropajos acero", cat: "limpieza", price: 1.79, note: "" },
+  { id: "estropajo_salvauñas", name: "Estropajo salvauñas", cat: "limpieza", price: 1.45, note: "" },
+  { id: "estropajo_resistente", name: "Estropajo resistente", cat: "limpieza", price: 0.85, note: "" },
+  { id: "bayeta_suave", name: "Bayeta suave", cat: "limpieza", price: 1.15, note: "" },
+  { id: "film_transparente", name: "Film transparente", cat: "limpieza", price: 1.69, note: "" },
+  { id: "papel_aluminio", name: "Papel aluminio", cat: "limpieza", price: 2.19, note: "" },
+  { id: "bolsa_basura_30l", name: "Bolsa basura med. 30L", cat: "limpieza", price: 1.75, note: "" },
+  { id: "ambientador_spray", name: "Ambientador spray", cat: "limpieza", price: 0.99, note: "" },
+  { id: "jarron_decor", name: "Jarrón decorativo", cat: "limpieza", price: 6.49, note: "" },
+
+  // Higiene, cuidado personal y mascotas
+  { id: "gel_bano_coco", name: "Gel de baño coco", cat: "higiene_mascotas", price: 1.49, note: "" },
+  { id: "gel_bano_frutal", name: "Gel de baño frutal", cat: "higiene_mascotas", price: 0.99, note: "" },
+  { id: "jabon_manos", name: "Jabón manos", cat: "higiene_mascotas", price: 1.25, note: "" },
+  { id: "pastillas_jabon", name: "Pastillas jabón", cat: "higiene_mascotas", price: 1.39, note: "" },
+  { id: "hs_champu", name: "H&S champú anticaspa", cat: "higiene_mascotas", price: 8.99, note: "" },
+  { id: "colgate_triple", name: "Colgate triple acción", cat: "higiene_mascotas", price: 1.95, note: "" },
+  { id: "dentifrico_max_fresh", name: "Dentífrico Max Fresh", cat: "higiene_mascotas", price: 2.85, note: "" },
+  { id: "dentifrico_blanqueador", name: "Dentífrico blanqueador", cat: "higiene_mascotas", price: 2.55, note: "" },
+  { id: "cepillo_dental", name: "Cepillo dental básico", cat: "higiene_mascotas", price: 0.99, note: "" },
+  { id: "roll_on_invisible", name: "Roll-on invisible", cat: "higiene_mascotas", price: 0.79, note: "" },
+  { id: "maquinillas_desech", name: "Maquinillas desechables", cat: "higiene_mascotas", price: 1.98, note: "" },
+  { id: "discos_desmaquillar", name: "Discos desmaquillar", cat: "higiene_mascotas", price: 1.79, note: "" },
+  { id: "toallitas_cara_manos", name: "Toallitas cara / manos", cat: "higiene_mascotas", price: 0.55, note: "" },
+  { id: "agua_micelar", name: "Agua micelar", cat: "higiene_mascotas", price: 4.99, note: "" },
+  { id: "crema_manos_aloe", name: "Crema manos aloe vera", cat: "higiene_mascotas", price: 0.73, note: "" },
+  { id: "croq_perros_gatos", name: "Croquetas perros-gatos", cat: "higiene_mascotas", price: 0.49, note: "" }
+];
+
+const STORAGE_KEY = "lista_compra_inteligente_v3";
+
+let state = loadState();
+let activeFilter = "all";
+let searchQuery = "";
+let manageMode = false;
+let lastDeleted = null;
+let toastTimer = null;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.items) && typeof parsed.quantities === "object") {
+        return { items: parsed.items, quantities: parsed.quantities };
+      }
+    }
+  } catch (e) {}
+  return {
+    items: structuredClone(INITIAL_ITEMS),
+    quantities: {}
+  };
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {}
+}
+
+function formatEur(num) {
+  return (Number(num) || 0).toFixed(2).replace(".", ",") + " €";
+}
+
+function showToast(msg, undoCallback = null) {
+  const box = document.getElementById("toastBox");
+  const text = document.getElementById("toastText");
+  const undoBtn = document.getElementById("toastUndoBtn");
+  text.textContent = msg;
+  if (undoCallback) {
+    undoBtn.style.display = "inline-block";
+    undoBtn.onclick = () => {
+      undoCallback();
+      box.classList.remove("show");
+    };
+  } else {
+    undoBtn.style.display = "none";
+  }
+  box.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => box.classList.remove("show"), 4500);
+}
+
+function setQty(id, q) {
+  const current = state.quantities[id] || 0;
+  if (q <= 0 || current === q) {
+    delete state.quantities[id];
+  } else {
+    state.quantities[id] = q;
+  }
+  saveState();
+  render();
+}
+
+function deleteItem(id) {
+  const idx = state.items.findIndex(it => it.id === id);
+  if (idx === -1) return;
+  const removedItem = state.items[idx];
+  const removedQty = state.quantities[id] || 0;
+  lastDeleted = { item: removedItem, qty: removedQty, index: idx };
+
+  state.items.splice(idx, 1);
+  delete state.quantities[id];
+  saveState();
+  render();
+
+  showToast(`Eliminado "${removedItem.name}"`, () => {
+    if (!lastDeleted) return;
+    state.items.splice(lastDeleted.index, 0, lastDeleted.item);
+    if (lastDeleted.qty > 0) {
+      state.quantities[lastDeleted.item.id] = lastDeleted.qty;
+    }
+    lastDeleted = null;
+    saveState();
+    render();
+  });
+}
+
+function renderFilterPills() {
+  const container = document.getElementById("filterPills");
+  const selectedCount = Object.values(state.quantities).filter(v => v > 0).length;
+  const pills = [
+    { id: "all", label: "Todos" },
+    { id: "selected", label: `En cesta (${selectedCount})` },
+    ...CATEGORIES.map(c => ({ id: c.id, label: `${c.icon} ${c.name.split(" ")[0]}` }))
+  ];
+  container.innerHTML = "";
+  pills.forEach(p => {
+    const btn = document.createElement("button");
+    btn.className = "pill" + (activeFilter === p.id ? " active" : "");
+    btn.textContent = p.label;
+    btn.onclick = () => {
+      activeFilter = p.id;
+      renderFilterPills();
+      renderList();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function renderList() {
+  const container = document.getElementById("listContainer");
+  const q = searchQuery.trim().toLowerCase();
+
+  const filtered = state.items.filter(it => {
+    const qty = state.quantities[it.id] || 0;
+    if (activeFilter === "selected" && qty <= 0) return false;
+    if (activeFilter !== "all" && activeFilter !== "selected" && it.cat !== activeFilter) return false;
+    if (q && !it.name.toLowerCase().includes(q) && !(it.note || "").toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:36px 16px; color:var(--muted); font-size:0.92rem;">No hay productos que coincidan con el filtro actual.</div>`;
+    return;
+  }
+
+  container.innerHTML = "";
+  CATEGORIES.forEach(cat => {
+    const catItems = filtered.filter(it => it.cat === cat.id);
+    if (catItems.length === 0) return;
+
+    const block = document.createElement("section");
+    block.className = "category-block";
+    block.innerHTML = `
+      <div class="category-header">
+        <span class="category-title">${cat.icon} ${cat.name}</span>
+        <span class="category-count">${catItems.length}</span>
+      </div>
+    `;
+
+    catItems.forEach(it => {
+      const qty = state.quantities[it.id] || 0;
+      const subtotal = qty * (Number(it.price) || 0);
+      const card = document.createElement("div");
+      card.className = "item-card" + (qty > 0 ? " selected" : "");
+
+      const rightControlHtml = manageMode
+        ? `<button type="button" class="delete-quick-btn" data-del="${it.id}">✕ Quitar</button>`
+        : `<button type="button" class="price-btn" data-edit="${it.id}" title="Editar precio o eliminar">${formatEur(it.price)}</button>`;
+
+      card.innerHTML = `
+        <div class="item-top">
+          <div class="item-name-wrap" data-toggle="${it.id}">
+            <div class="item-name">${it.name}</div>
+            ${it.note ? `<div class="item-note">${it.note}</div>` : ""}
+          </div>
+          <div class="price-box">${rightControlHtml}</div>
+        </div>
+        <div class="qty-row">
+          <div class="circles">
+            ${[1, 2, 3, 4, 5].map(n => `
+              <button type="button" class="qty-circle ${qty === n ? "active" : ""}" data-qty="${it.id}" data-val="${n}">${n}</button>
+            `).join("")}
+            <button type="button" class="qty-circle ${qty > 5 ? "active" : ""}" data-plus="${it.id}" title="Más de 5 unidades">${qty > 5 ? qty : "+"}</button>
+          </div>
+          <div class="subtotal-label ${qty > 0 ? "has-val" : ""}">${qty > 0 ? `${qty} × ${formatEur(it.price)} = ${formatEur(subtotal)}` : "0 uds"}</div>
+        </div>
+      `;
+      block.appendChild(card);
+    });
+
+    container.appendChild(block);
+  });
+
+  container.querySelectorAll("[data-toggle]").forEach(el => {
+    el.onclick = () => {
+      const id = el.getAttribute("data-toggle");
+      const cur = state.quantities[id] || 0;
+      setQty(id, cur === 0 ? 1 : 0);
+    };
+  });
+
+  container.querySelectorAll("[data-qty]").forEach(btn => {
+    btn.onclick = () => {
+      setQty(btn.getAttribute("data-qty"), Number(btn.getAttribute("data-val")));
+    };
+  });
+
+  container.querySelectorAll("[data-plus]").forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.getAttribute("data-plus");
+      const cur = state.quantities[id] || 5;
+      const next = cur < 5 ? 6 : cur + 1;
+      setQty(id, next);
+    };
+  });
+
+  container.querySelectorAll("[data-edit]").forEach(btn => {
+    btn.onclick = () => openEditModal(btn.getAttribute("data-edit"));
+  });
+
+  container.querySelectorAll("[data-del]").forEach(btn => {
+    btn.onclick = () => deleteItem(btn.getAttribute("data-del"));
+  });
+}
+
+function renderSummary() {
+  let distinctCount = 0;
+  let totalUnits = 0;
+  let totalEur = 0;
+
+  state.items.forEach(it => {
+    const q = state.quantities[it.id] || 0;
+    if (q > 0) {
+      distinctCount += 1;
+      totalUnits += q;
+      totalEur += q * (Number(it.price) || 0);
+    }
+  });
+
+  document.getElementById("statsSubtitle").textContent = `${state.items.length} artículos · ${totalUnits} uds en cesta`;
+  document.getElementById("dockCount").textContent = `${distinctCount} ${distinctCount === 1 ? "producto" : "productos"} · ${totalUnits} uds`;
+  document.getElementById("dockTotal").textContent = formatEur(totalEur);
+}
+
+function render() {
+  renderFilterPills();
+  renderList();
+  renderSummary();
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add("open");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+}
+
+function openEditModal(id) {
+  const it = state.items.find(x => x.id === id);
+  if (!it) return;
+  document.getElementById("editId").value = it.id;
+  document.getElementById("editTitle").textContent = it.name;
+  document.getElementById("editName").value = it.name;
+  document.getElementById("editPrice").value = it.price;
+  document.getElementById("editNote").value = it.note || "";
+  openModal("editModal");
+}
+
+document.querySelectorAll("[data-close]").forEach(el => {
+  el.onclick = () => closeModal(el.getAttribute("data-close"));
+});
+
+document.querySelectorAll(".modal-backdrop").forEach(bd => {
+  bd.onclick = e => {
+    if (e.target === bd) bd.classList.remove("open");
+  };
+});
+
+document.getElementById("searchInput").oninput = e => {
+  searchQuery = e.target.value;
+  renderList();
+};
+
+document.getElementById("clearSearchBtn").onclick = () => {
+  searchQuery = "";
+  document.getElementById("searchInput").value = "";
+  renderList();
+};
+
+const toggleManageBtn = document.getElementById("toggleManageBtn");
+const manageBanner = document.getElementById("manageBanner");
+
+function setManageMode(val) {
+  manageMode = val;
+  toggleManageBtn.classList.toggle("active-mode", manageMode);
+  manageBanner.classList.toggle("show", manageMode);
+  renderList();
+}
+
+toggleManageBtn.onclick = () => setManageMode(!manageMode);
+document.getElementById("exitManageBtn").onclick = () => setManageMode(false);
+
+const newCatSelect = document.getElementById("newCategory");
+CATEGORIES.forEach(c => {
+  const opt = document.createElement("option");
+  opt.value = c.id;
+  opt.textContent = `${c.icon} ${c.name}`;
+  newCatSelect.appendChild(opt);
+});
+
+document.getElementById("openAddBtn").onclick = () => {
+  document.getElementById("addForm").reset();
+  document.getElementById("newQty").value = "1";
+  openModal("addModal");
+};
+
+document.getElementById("addForm").onsubmit = e => {
+  e.preventDefault();
+  const name = document.getElementById("newName").value.trim();
+  const cat = document.getElementById("newCategory").value;
+  const price = parseFloat(document.getElementById("newPrice").value) || 0;
+  const note = document.getElementById("newNote").value.trim();
+  const qty = Math.max(0, parseInt(document.getElementById("newQty").value, 10) || 0);
+  if (!name) return;
+
+  const id = "custom_" + Date.now();
+  state.items.unshift({ id, name, cat, price, note });
+  if (qty > 0) state.quantities[id] = qty;
+  saveState();
+  render();
+  closeModal("addModal");
+  showToast(`Añadido "${name}"`);
+};
+
+document.getElementById("editForm").onsubmit = e => {
+  e.preventDefault();
+  const id = document.getElementById("editId").value;
+  const it = state.items.find(x => x.id === id);
+  if (!it) return;
+  it.name = document.getElementById("editName").value.trim() || it.name;
+  it.price = parseFloat(document.getElementById("editPrice").value) || 0;
+  it.note = document.getElementById("editNote").value.trim();
+  saveState();
+  render();
+  closeModal("editModal");
+  showToast("Producto actualizado");
+};
+
+document.getElementById("deleteFromModalBtn").onclick = () => {
+  const id = document.getElementById("editId").value;
+  closeModal("editModal");
+  deleteItem(id);
+};
+
+document.getElementById("clearCartBtn").onclick = () => {
+  if (Object.keys(state.quantities).length === 0) return;
+  state.quantities = {};
+  saveState();
+  render();
+  showToast("Cesta vaciada");
+};
+
+document.getElementById("openTicketBtn").onclick = () => {
+  const linesEl = document.getElementById("ticketLines");
+  const totalEl = document.getElementById("ticketTotal");
+  const selected = state.items.filter(it => (state.quantities[it.id] || 0) > 0);
+  let total = 0;
+
+  if (selected.length === 0) {
+    linesEl.innerHTML = `<p style="color:var(--muted); font-size:0.9rem;">No has marcado ningún producto todavía.</p>`;
+  } else {
+    linesEl.innerHTML = selected.map(it => {
+      const q = state.quantities[it.id];
+      const sub = q * (Number(it.price) || 0);
+      total += sub;
+      return `<div class="ticket-line"><span><b>${q}×</b> ${it.name}</span><span>${formatEur(sub)}</span></div>`;
+    }).join("");
+  }
+  totalEl.textContent = formatEur(total);
+  openModal("ticketModal");
+};
+
+document.getElementById("copyListBtn").onclick = async () => {
+  const selected = state.items.filter(it => (state.quantities[it.id] || 0) > 0);
+  if (selected.length === 0) return;
+  let total = 0;
+  const lines = selected.map(it => {
+    const q = state.quantities[it.id];
+    const sub = q * (Number(it.price) || 0);
+    total += sub;
+    return `- ${q}x ${it.name} (${formatEur(sub)})`;
+  });
+  lines.push(`
+Total estimado: ${formatEur(total)}`);
+  const text = lines.join("
+");
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("Lista copiada al portapapeles");
+  } catch (e) {
+    showToast("No se pudo copiar automáticamente");
+  }
+};
+
+document.getElementById("openSettingsBtn").onclick = () => openModal("settingsModal");
+
+document.getElementById("exportJsonBtn").onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "lista_compra_backup.json";
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById("resetCatalogBtn").onclick = () => {
+  state = { items: structuredClone(INITIAL_ITEMS), quantities: {} };
+  saveState();
+  render();
+  closeModal("settingsModal");
+  showToast("Catálogo original restaurado");
+};
+
+render();
+</script>
+</body>
+</html>
+
+"""
