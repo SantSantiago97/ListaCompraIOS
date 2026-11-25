@@ -1,0 +1,43 @@
+name: Compilar IPA iOS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Instalar XcodeGen
+        run: brew install xcodegen
+
+      - name: Generar proyecto Xcode
+        run: xcodegen generate
+
+      - name: Compilar aplicación iOS (Release)
+        run: |
+          xcodebuild -project ListaCompra.xcodeproj \
+            -scheme ListaCompra \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Empaquetar archivo .ipa
+        run: |
+          mkdir -p Payload
+          cp -r build/Build/Products/Release-iphoneos/ListaCompra.app Payload/
+          zip -r ListaCompra.ipa Payload
+
+      - name: Subir artefacto IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ListaCompra-IPA
+          path: ListaCompra.ipa
